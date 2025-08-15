@@ -5,12 +5,15 @@ local Workspace = game:GetService("Workspace")
 -- الحصول على موديل FuseMachine
 local fuseMachine = Workspace:WaitForChild("FuseMachine")
 
--- اختيار أي جزء داخل الموديل لعرض الاسم فوقه
+-- تحديد أي BasePart داخل الموديل لعرض ESP
 local fusePart = fuseMachine:FindFirstChildWhichIsA("BasePart")
+if not fusePart then
+    warn("لا يوجد BasePart داخل موديل FuseMachine! الرجاء إضافة جزء لتثبيت ESP.")
+    return
+end
 
 -- إنشاء ESP عند ظهور حيوان جديد
 local function updateESP(animalName)
-    -- إزالة أي ESP قديم
     if fuseMachine:FindFirstChild("ESP") then
         fuseMachine.ESP:Destroy()
     end
@@ -28,13 +31,13 @@ local function updateESP(animalName)
     label.BackgroundTransparency = 1
     label.TextScaled = true
     label.TextStrokeTransparency = 0
-    label.TextColor3 = Color3.fromRGB(0,255,0) -- لون أخضر دائم
+    label.TextColor3 = Color3.fromRGB(0,255,0)
     label.Text = animalName
     label.Parent = billboard
 end
 
 -- مراقبة الحيوانات القادمة من FuseMachine
 fuseMachine.ChildAdded:Connect(function(animal)
-    wait(0.3) -- للتأكد من ظهور الحيوان
+    wait(0.3)
     updateESP(animal.Name)
 end)
