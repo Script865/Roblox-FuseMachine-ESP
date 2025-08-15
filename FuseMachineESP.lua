@@ -1,11 +1,11 @@
 -- LocalScript في StarterPlayerScripts
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
--- الحصول على موديل FuseMachine
 local fuseMachine = Workspace:WaitForChild("FuseMachine")
 
--- تحديد أو إنشاء BasePart داخل الموديل لتثبيت ESP
+-- BasePart لتثبيت الاسم
 local fusePart = fuseMachine:FindFirstChildWhichIsA("BasePart")
 if not fusePart then
     fusePart = Instance.new("Part")
@@ -14,13 +14,12 @@ if not fusePart then
     fusePart.Transparency = 1
     fusePart.Anchored = true
     fusePart.CanCollide = false
-    fusePart.Position = fuseMachine:GetModelCFrame().p + Vector3.new(0,5,0) -- فوق الموديل
+    fusePart.Position = fuseMachine:GetModelCFrame().p + Vector3.new(0,5,0)
     fusePart.Parent = fuseMachine
 end
 
--- إنشاء ESP عند ظهور حيوان جديد داخل FuseMachine
+-- إنشاء ESP فوق الجهاز
 local function createESP(animalName)
-    -- إزالة أي ESP قديم
     if fuseMachine:FindFirstChild("ESP") then
         fuseMachine.ESP:Destroy()
     end
@@ -43,10 +42,10 @@ local function createESP(animalName)
     label.Parent = billboard
 end
 
--- مراقبة أي موديل جديد يظهر داخل FuseMachine
-fuseMachine.DescendantAdded:Connect(function(descendant)
-    if descendant:IsA("Model") and descendant.Parent == fuseMachine then
-        wait(0.3) -- للتأكد من ظهور الحيوان
-        createESP(descendant.Name)
-    end
+-- استماع للـ RemoteEvent الذي يولد الحيوان (مثال: RevealNow)
+local ReplicatedNet = require(ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"))
+local revealEvent = ReplicatedNet:RemoteEvent("FuseMachine/RevealNow")
+
+revealEvent.OnClientEvent:Connect(function(animalName)
+    createESP(animalName)
 end)
