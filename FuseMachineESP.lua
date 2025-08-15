@@ -1,11 +1,11 @@
 -- LocalScript في StarterPlayerScripts
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
+-- موديل الجهاز
 local fuseMachine = Workspace:WaitForChild("FuseMachine")
 
--- BasePart لتثبيت الاسم
+-- تحديد أو إنشاء BasePart لتثبيت اسم الحيوان فوق الجهاز
 local fusePart = fuseMachine:FindFirstChildWhichIsA("BasePart")
 if not fusePart then
     fusePart = Instance.new("Part")
@@ -18,7 +18,7 @@ if not fusePart then
     fusePart.Parent = fuseMachine
 end
 
--- إنشاء ESP فوق الجهاز
+-- دالة لإنشاء ESP فوق الجهاز
 local function createESP(animalName)
     if fuseMachine:FindFirstChild("ESP") then
         fuseMachine.ESP:Destroy()
@@ -42,10 +42,14 @@ local function createESP(animalName)
     label.Parent = billboard
 end
 
--- استماع للـ RemoteEvent الذي يولد الحيوان (مثال: RevealNow)
-local ReplicatedNet = require(ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"))
-local revealEvent = ReplicatedNet:RemoteEvent("FuseMachine/RevealNow")
-
-revealEvent.OnClientEvent:Connect(function(animalName)
-    createESP(animalName)
+-- مراقبة ظهور أي موديل جديد في Workspace
+Workspace.DescendantAdded:Connect(function(descendant)
+    if descendant:IsA("Model") then
+        -- تحقق إذا هذا الموديل قريب من FuseMachine (مثلاً ضمن 10 studs)
+        local mainPart = descendant:FindFirstChildWhichIsA("BasePart")
+        if mainPart and (mainPart.Position - fuseMachine:GetModelCFrame().p).Magnitude <= 10 then
+            wait(0.3) -- تأخير للتأكد من ظهور الموديل
+            createESP(descendant.Name)
+        end
+    end
 end)
