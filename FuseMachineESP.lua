@@ -1,13 +1,16 @@
--- LocalScript في StarterPlayerScripts
-
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
-local player = Players.LocalPlayer
+local RunService = game:GetService("RunService")
 
--- الحصول على موديل FuseMachine
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
 local fuseMachine = Workspace:WaitForChild("FuseMachine")
 
--- إعداد ألوان حسب ندرة الحيوان
+-- اختيار نقطة ثابتة في الموديل للجهاز
+local fusePart = fuseMachine:FindFirstChildWhichIsA("BasePart") -- أي جزء موجود داخل الموديل
+
+-- ألوان حسب ندرة الحيوان
 local rarityColors = {
     ["Common"] = Color3.fromRGB(255,255,255),
     ["Rare"] = Color3.fromRGB(0,255,255),
@@ -18,16 +21,14 @@ local rarityColors = {
     ["Secret"] = Color3.fromRGB(0,255,0)
 }
 
--- إنشاء أو تحديث ESP فوق الجهاز
 local function updateESP(animalName)
-    -- إزالة أي ESP قديم
     if fuseMachine:FindFirstChild("ESP") then
         fuseMachine.ESP:Destroy()
     end
 
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "ESP"
-    billboard.Adornee = fuseMachine
+    billboard.Adornee = fusePart
     billboard.Size = UDim2.new(0,200,0,50)
     billboard.StudsOffset = Vector3.new(0,5,0)
     billboard.AlwaysOnTop = true
@@ -52,20 +53,17 @@ local function updateESP(animalName)
 
     label.Parent = billboard
 
-    -- تحديث المسافة كل إطار
-    local updateConn
-    updateConn = game:GetService("RunService").RenderStepped:Connect(function()
-        if not fuseMachine or not fuseMachine.Parent then
-            updateConn:Disconnect()
-            return
+    -- تحديث المسافة كل إطار إذا كان Character موجود
+    RunService.RenderStepped:Connect(function()
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") and fusePart then
+            local distance = math.floor((char.HumanoidRootPart.Position - fusePart.Position).Magnitude)
+            label.Text = animalName.." ["..distance.." studs]"
         end
-        local distance = math.floor((player.Character.PrimaryPart.Position - fuseMachine.PrimaryPart.Position).Magnitude)
-        label.Text = animalName.." ["..distance.." studs]"
     end)
 end
 
--- مراقبة الحيوانات القادمة من FuseMachine
 fuseMachine.ChildAdded:Connect(function(animal)
-    wait(0.3) -- للتأكد من ظهور الحيوان
+    wait(0.3)
     updateESP(animal.Name)
 end)
