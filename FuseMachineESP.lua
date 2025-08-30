@@ -1,6 +1,4 @@
--- ضع هذا LocalScript في StarterPlayerScripts
-
--- 1️⃣ إنشاء RemoteEvent لو ما موجود
+-- إنشاء RemoteEvent إذا لم يكن موجودًا
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local eventName = "FuseMachineESPEvent"
 local remoteEvent = ReplicatedStorage:FindFirstChild(eventName)
@@ -10,7 +8,7 @@ if not remoteEvent then
     remoteEvent.Parent = ReplicatedStorage
 end
 
--- 2️⃣ إنشاء GUI أساسي
+-- إنشاء GUI أساسي
 local player = game.Players.LocalPlayer
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "FuseMachineESP_GUI"
@@ -31,7 +29,7 @@ toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Text = "تفعيل ESP"
 toggleButton.Parent = mainFrame
 
--- 3️⃣ تحميل السكربت من الرابط
+-- تحميل السكربت من الرابط
 local url = "https://raw.githubusercontent.com/Script865/Roblox-FuseMachine-ESP/refs/heads/main/FuseMachineESP.lua"
 local success, response = pcall(function()
     return game:HttpGet(url, true)
