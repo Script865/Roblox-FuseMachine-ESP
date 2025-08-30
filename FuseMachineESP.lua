@@ -1,53 +1,61 @@
--- LocalScript في StarterPlayerScripts
+-- سكربت واحد يسوي كل شيء
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
 
--- موديل الجهاز
-local fuseMachine = Workspace:WaitForChild("FuseMachine")
-
--- تحديد BasePart لتثبيت اسم الحيوان فوق الجهاز
-local fusePart = fuseMachine:FindFirstChildWhichIsA("BasePart")
-if not fusePart then
-    fusePart = Instance.new("Part")
-    fusePart.Name = "ESPAnchor"
-    fusePart.Size = Vector3.new(1,1,1)
-    fusePart.Transparency = 1
-    fusePart.Anchored = true
-    fusePart.CanCollide = false
-    fusePart.Position = fuseMachine:GetModelCFrame().p + Vector3.new(0,5,0)
-    fusePart.Parent = fuseMachine
+-- 🟢 1. إنشاء RemoteEvent إذا ما كان موجود
+local event = ReplicatedStorage:FindFirstChild("ForceLosEvent")
+if not event then
+    event = Instance.new("RemoteEvent")
+    event.Name = "ForceLosEvent"
+    event.Parent = ReplicatedStorage
 end
 
--- دالة لإنشاء ESP
-local function createESP(animalName)
-    if fuseMachine:FindFirstChild("ESP") then
-        fuseMachine.ESP:Destroy()
-    end
+-- 🟢 2. GUI + زر يتركب عند دخول اللاعب
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Wait() -- ننتظر الشخصية
 
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = "ESP"
-    billboard.Adornee = fusePart
-    billboard.Size = UDim2.new(0,200,0,50)
-    billboard.StudsOffset = Vector3.new(0,2,0)
-    billboard.AlwaysOnTop = true
-    billboard.Parent = fuseMachine
+    -- إنشاء ScreenGui
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "LosControlGui"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = player:WaitForChild("PlayerGui")
 
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1,0,1,0)
-    label.BackgroundTransparency = 1
-    label.TextScaled = true
-    label.TextStrokeTransparency = 0
-    label.TextColor3 = Color3.fromRGB(0,255,0)
-    label.Text = animalName
-    label.Parent = billboard
-end
+    -- إنشاء زر
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 200, 0, 50)
+    button.Position = UDim2.new(0.5, -100, 0.8, 0)
+    button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Font = Enum.Font.SourceSansBold
+    button.TextSize = 24
+    button.Text = "Force Los Combinasionas"
+    button.Parent = screenGui
 
--- استدعاء RemoteEvent الخاص بالفيوز
-local Net = require(ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"))
-local revealEvent = Net:RemoteEvent("FuseMachine/RevealNow")
+    -- LocalScript داخل الزر
+    local localScript = Instance.new("LocalScript")
+    localScript.Parent = button
+    localScript.Source = [[
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local event = ReplicatedStorage:WaitForChild("ForceLosEvent")
+        local button = script.Parent
 
--- الاستماع لحدث ظهور الحيوان من الجهاز
-revealEvent.OnClientEvent:Connect(function(animalName)
-    createESP(animalName)
+        button.MouseButton1Click:Connect(function()
+            event:FireServer()
+        end)
+    ]]
+end)
+
+-- 🟢 3. السيرفر: لما يضغط اللاعب الزر
+event.OnServerEvent:Connect(function(player)
+    local AnimalsFolder = ReplicatedStorage:WaitForChild("Datas"):WaitForChild("Animals")
+    local Synchronizer = require(ReplicatedStorage.Modules.ClientServer.Synchronizer)
+
+    -- نجبر الـ FuseMachine على Los Combinasionas فقط
+    local odds = {
+        ["Los Combinasionas"] = 100
+    }
+    Synchronizer.UpdateValue(player, "FuseMachine/Data/OutputRarityOdds", odds)
+
+    print(player.Name .. " فعل Los Combinasionas 100%")
 end)
